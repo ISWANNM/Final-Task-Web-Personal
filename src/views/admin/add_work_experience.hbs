@@ -1,0 +1,52 @@
+<section class="max-w-2xl mx-auto py-10">
+  <h2 class="text-2xl font-bold mb-6">Add Work Experience</h2>
+
+  <form action="/admin/add_work_experience" method="POST" enctype="multipart/form-data" class="space-y-5">
+    <div>
+      <label class="block font-medium mb-1">Position</label>
+      <input type="text" name="position" required class="w-full border px-3 py-2 rounded-md">
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Company</label>
+      <input type="text" name="company" required class="w-full border px-3 py-2 rounded-md">
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block font-medium mb-1">Start Date</label>
+        <input type="date" name="start_date" required class="w-full border px-3 py-2 rounded-md">
+      </div>
+      <div>
+        <label class="block font-medium mb-1">End Date</label>
+        <input type="date" name="end_date" class="w-full border px-3 py-2 rounded-md">
+      </div>
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Description</label>
+      <textarea name="description" rows="4" class="w-full border px-3 py-2 rounded-md"></textarea>
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Tech Used</label>
+      <div class="flex flex-wrap gap-4">
+        <label><input type="checkbox" name="tech_used" value="JavaScript"> JavaScript</label>
+        <label><input type="checkbox" name="tech_used" value="Node.js"> Node.js</label>
+        <label><input type="checkbox" name="tech_used" value="Express"> Express</label>
+        <label><input type="checkbox" name="tech_used" value="React"> React</label>
+        <label><input type="checkbox" name="tech_used" value="PostgreSQL"> PostgreSQL</label>
+        <label><input type="checkbox" name="tech_used" value="Tailwind"> Tailwind</label>
+      </div>
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Company Logo (optional)</label>
+      <input type="file" name="image" accept="image/*" class="w-full border px-3 py-2 rounded-md">
+    </div>
+
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+      Save Experience
+    </button>
+  </form>
+</section>

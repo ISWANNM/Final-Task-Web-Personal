@@ -1,0 +1,45 @@
+<h2 class="form-title">Tambah Project</h2>
+
+{{#if messages}}
+  <div class="flash-message">{{messages}}</div>
+{{/if}}
+
+<form method="POST" action="/admin/add-project" enctype="multipart/form-data" class="add-project-form">
+  <div class="form-group">
+    <label>Nama Project:</label>
+    <input type="text" name="name" required placeholder="Masukkan nama project">
+  </div>
+
+  <div class="form-group">
+    <label>Deskripsi:</label>
+    <textarea name="description" required placeholder="Tuliskan deskripsi project..."></textarea>
+  </div>
+
+  <div class="form-group">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Upload Gambar</label>
+    <input type="file" name="image" accept="image/*" class="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer focus:outline-none" required>
+  </div>
+
+  <div>
+      <label class="block font-medium mb-1">Tech Used</label>
+      <div class="flex flex-wrap gap-4">
+        <label><input type="checkbox" name="tech_stack" value="JavaScript"> JavaScript</label>
+        <label><input type="checkbox" name="tech_stack" value="Node.js"> Node.js</label>
+        <label><input type="checkbox" name="tech_stack" value="Express"> Express</label>
+        <label><input type="checkbox" name="tech_stack" value="React"> React</label>
+        <label><input type="checkbox" name="tech_stack" value="PostgreSQL"> PostgreSQL</label>
+        <label><input type="checkbox" name="tech_stack" value="Tailwind"> Tailwind</label>
+        <label><input type="checkbox" name="tech_stack" value="Tailwind"> Next.js</label>
+        <label><input type="checkbox" name="tech_stack" value="Tailwind"> Unity</label>
+        <label><input type="checkbox" name="tech_stack" value="Tailwind"> .Net</label>
+        <label><input type="checkbox" name="tech_stack" value="Tailwind"> MongoDB</label>
+      </div>
+    </div>
+
+  <div class="form-group">
+    <label>Link Project:</label>
+    <input type="text" name="link" placeholder="https://example.com">
+  </div>
+
+  <button type="submit" class="btn-submit"> Simpan Project</button>
+</form>
