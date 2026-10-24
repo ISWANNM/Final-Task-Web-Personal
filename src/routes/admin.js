@@ -2,7 +2,10 @@ import express from "express";
 import pool from "../models/db.js";
 import multer from "multer";
 import path from "path";
+import { writeFile } from "fs/promises";
 import { fileURLToPath } from "url";
+import { put } from "@vercel/blob";
+import bcrypt from "bcrypt";
 import { getAddProject } from "../controllers/addproject.js";
 import { getAddExperience, postAddExperience } from "../controllers/addExperience.js";
 
@@ -12,18 +15,39 @@ const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// === Konfigurasi multer untuk upload gambar ===
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../../public/img/projects"));
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + path.extname(file.originalname);
-    cb(null, uniqueName);
-  },
-});
+const upload = multer({ storage: multer.memoryStorage() });
 
-const upload = multer({ storage });
+const saveUploadedImage = async (file, directory) => {
+  if (!file) {
+    return null;
+  }
+
+  const filename = `${Date.now()}${path.extname(file.originalname)}`;
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const blob = await put(`${directory}/${filename}`, file.buffer, {
+      access: "public",
+      addRandomSuffix: true,
+    });
+    return blob.url;
+  }
+
+  if (process.env.VERCEL) {
+    throw new Error("BLOB_READ_WRITE_TOKEN must be configured to upload images on Vercel.");
+  }
+
+  await writeFile(path.join(__dirname, "../../public/img", directory, filename), file.buffer);
+  return `/img/${directory}/${filename}`;
+};
+
+const requireLogin = (req, res, next) => {
+  if (!req.session.userId) {
+    req.flash("error", "Silakan login terlebih dahulu.");
+    return res.redirect("/admin/login");
+  }
+
+  next();
+};
 
 // === Login page ===
 router.get("/login", (req, res) => {
@@ -37,7 +61,13 @@ router.post("/login", async (req, res) => {
     const result = await pool.query("SELECT * FROM users WHERE username = $1", [username]);
     const user = result.rows[0];
 
-    if (user && user.password === password) {
+    const passwordMatches = user
+      ? user.password.startsWith("$2")
+        ? await bcrypt.compare(password, user.password)
+        : user.password === password
+      : false;
+
+    if (user && passwordMatches) {
       req.session.userId = user.id;
       res.redirect("/");
     } else {
@@ -52,10 +82,10 @@ router.post("/login", async (req, res) => {
 });
 
 // === Form tambah project ===
-router.get("/add-project", getAddProject);
+router.get("/add-project", requireLogin, getAddProject);
 
 // === Proses tambah project + upload gambar ===
-router.post("/add-project", upload.single("image"), async (req, res) => {
+router.post("/add-project", requireLogin, upload.single("image"), async (req, res) => {
   try {
     const { name, description, link } = req.body;
 
@@ -67,7 +97,7 @@ router.post("/add-project", upload.single("image"), async (req, res) => {
 
     // Simpan ke DB dalam format JSON string (agar mudah diambil lagi)
     const techStackJson = JSON.stringify(tech_stack);
-    const image_url = req.file ? `/img/projects/${req.file.filename}` : null;
+    const image_url = await saveUploadedImage(req.file, "projects");
 
     await pool.query(
       `INSERT INTO projects (title, description, image_url, tech_stack, project_link)
@@ -84,19 +114,21 @@ router.post("/add-project", upload.single("image"), async (req, res) => {
 });
 
 // work experience //
-const storageExperience = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../../public/img/experience"));
+router.get("/add_work_experience", requireLogin, getAddExperience);
+router.post(
+  "/add_work_experience",
+  requireLogin,
+  upload.single("image"),
+  async (req, res, next) => {
+    try {
+      req.imageUrl = await saveUploadedImage(req.file, "experience");
+      next();
+    } catch (error) {
+      next(error);
+    }
   },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + path.extname(file.originalname);
-    cb(null, uniqueName);
-  },
-});
-const uploadExperience = multer({ storage: storageExperience });
-
-router.get("/add_work_experience", getAddExperience);
-router.post("/add_work_experience", uploadExperience.single("image"), postAddExperience);
+  postAddExperience
+);
 
 // === Logout ===
 router.post("/logout", (req, res) => {

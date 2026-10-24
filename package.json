@@ -6,16 +6,19 @@
   "type": "module",
   "scripts": {
     "start": "nodemon src/app.js",
+    "create-admin": "node src/utils/insertUser.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@vercel/blob": "^2.8.2",
     "autoprefixer": "^10.4.21",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.0",
     "connect-flash": "^0.1.1",
+    "connect-pg-simple": "^10.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",

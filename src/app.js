@@ -5,15 +5,23 @@ import hbs from "hbs";
 import ExpressHandlebars from "express-handlebars";
 import session from "express-session";
 import flash from "connect-flash";
+import connectPgSimple from "connect-pg-simple";
 
 import adminRoutes from "./routes/admin.js";
 import { getHome } from "./controllers/homeController.js";
+import pool from "./models/db.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const sessionSecret = process.env.SESSION_SECRET || "local-development-secret";
+const PgSessionStore = connectPgSimple(session);
+
+if (process.env.VERCEL && !process.env.SESSION_SECRET) {
+  throw new Error("SESSION_SECRET must be configured in Vercel environment variables.");
+}
 
 // === Setup Handlebars ===
 app.engine(
@@ -44,11 +52,23 @@ app.use("/img", express.static(path.join(__dirname, "..", "public", "img")));
 app.use(express.static(path.join(__dirname, "..", "public")));
 
 // === Session & Flash ===
+app.set("trust proxy", 1);
 app.use(
   session({
-    secret: "supersecretkey",
+    store: process.env.VERCEL
+      ? new PgSessionStore({
+          pool,
+          createTableIfMissing: true,
+        })
+      : undefined,
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.VERCEL ? "auto" : false,
+    },
   })
 );
 app.use(flash());

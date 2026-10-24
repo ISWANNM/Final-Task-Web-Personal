@@ -21,7 +21,7 @@ export const postAddExperience = async (req, res) => {
     // Convert tech_used (checkbox) jadi array JSON
     const techUsedArray = Array.isArray(tech_used) ? tech_used : [tech_used];
 
-    const image_url = req.file ? `/img/experience/${req.file.filename}` : null;
+    const image_url = req.imageUrl || null;
 
     await pool.query(
       `INSERT INTO work_experiences (position, company, start_date, end_date, description, tech_used, image_url)

@@ -1,27 +1,26 @@
 import bcrypt from "bcrypt";
 import { pool } from "../models/db.js";
 
-async function insertUser() {
-  try {
-    const username = "admin"; // ubah sesuai kebutuhan
-    const password = "admin123";
+const { ADMIN_USERNAME: username, ADMIN_PASSWORD: password } = process.env;
 
-    // hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // insert ke database
-    const result = await pool.query(
-      `INSERT INTO users (username, password) VALUES ($1, $2) RETURNING *`,
-      [username, hashedPassword]
-    );
-
-    console.log("✅ User berhasil ditambahkan:");
-    console.log(result.rows[0]);
-  } catch (err) {
-    console.error("❌ Error saat insert user:", err.message);
-  } finally {
-    pool.end();
-  }
+if (!username || !password) {
+  console.error("Set ADMIN_USERNAME and ADMIN_PASSWORD before creating an admin user.");
+  await pool.end();
+  process.exit(1);
 }
 
-insertUser();
+try {
+  const hashedPassword = await bcrypt.hash(password, 12);
+  await pool.query(
+    `INSERT INTO users (username, password)
+     VALUES ($1, $2)
+     ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password`,
+    [username, hashedPassword]
+  );
+  console.log(`Admin user "${username}" created or updated.`);
+} catch (error) {
+  console.error("Failed to create admin user:", error.message);
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}
