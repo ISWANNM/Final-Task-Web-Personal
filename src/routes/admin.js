@@ -61,10 +61,10 @@ router.post("/add-project", upload.single("image"), async (req, res) => {
     const { name, description, link } = req.body;
 
     // Pastikan tech_stack selalu array (meskipun cuma 1 checkbox dipilih)
-    let tech_stack = req.body.tech_stack;
-    if (!Array.isArray(tech_stack)) {
-      tech_stack = [tech_stack];
-    }
+    const tech_stack = (Array.isArray(req.body.tech_stack)
+      ? req.body.tech_stack
+      : [req.body.tech_stack]
+    ).filter(Boolean);
 
     // Simpan ke DB dalam format JSON string (agar mudah diambil lagi)
     const techStackJson = JSON.stringify(tech_stack);

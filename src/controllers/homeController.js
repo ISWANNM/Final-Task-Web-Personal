@@ -1,36 +1,32 @@
 import pool from "../models/db.js";
+import { getGithubProjects } from "../services/githubProjects.js";
 
 export const getHome = async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM projects ORDER BY id DESC");
-    const experienceResult = await pool.query("SELECT * FROM work_experiences ORDER BY id DESC");
-    
-    
-    const projects = result.rows.map((p) => {
-      let techStackArray = [];
+    const [projectResult, experienceResult, githubProjects] = await Promise.all([
+      pool.query("SELECT * FROM projects ORDER BY id DESC"),
+      pool.query("SELECT * FROM work_experiences ORDER BY id DESC"),
+      getGithubProjects(),
+    ]);
+
+    const savedProjects = projectResult.rows.map((project) => {
+      let techStack = [];
 
       try {
-        if (typeof p.tech_stack === "string") {
-          // Kalau string JSON (misal: '["HTML","CSS","JS"]')
-          if (p.tech_stack.trim().startsWith("[")) {
-            techStackArray = JSON.parse(p.tech_stack);
-          } else {
-            // Kalau masih format lama: "HTML, CSS, JS"
-            techStackArray = p.tech_stack.split(",").map((t) => t.trim());
-          }
-        } else if (Array.isArray(p.tech_stack)) {
-          techStackArray = p.tech_stack;
+        if (Array.isArray(project.tech_stack)) {
+          techStack = project.tech_stack;
+        } else if (typeof project.tech_stack === "string") {
+          techStack = project.tech_stack.trim().startsWith("[")
+            ? JSON.parse(project.tech_stack)
+            : project.tech_stack.split(",").map((technology) => technology.trim());
         }
-      } catch (err) {
-        console.warn("⚠️ Gagal parse tech_stack:", p.tech_stack);
-        techStackArray = [];
+      } catch (error) {
+        console.warn("Gagal membaca tech_stack project:", error.message);
       }
 
-      return {
-        ...p,
-        tech_stack: techStackArray,
-      };
+      return { ...project, tech_stack: techStack };
     });
+    const projects = [...savedProjects, ...githubProjects];
 
     const experiences = experienceResult.rows.map(exp => {
       let descriptionArray = [];
