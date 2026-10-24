@@ -13,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // === Setup Handlebars ===
 app.engine(
@@ -40,8 +40,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Static files
-app.use("/img", express.static(path.join(__dirname, "src/public/img")));
-app.use(express.static(path.join(__dirname, "public")));
+app.use("/img", express.static(path.join(__dirname, "..", "public", "img")));
+app.use(express.static(path.join(__dirname, "..", "public")));
 
 // === Session & Flash ===
 app.use(
@@ -65,7 +65,10 @@ app.use((req, res, next) => {
 app.get("/", getHome);
 app.use("/admin", adminRoutes);
 
-// === Server start ===
-app.listen(PORT, () =>
-  console.log(`🚀 Server running at http://localhost:${PORT}`)
-);
+export default app;
+
+if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
+  app.listen(PORT, () =>
+    console.log(`🚀 Server running at http://localhost:${PORT}`)
+  );
+}

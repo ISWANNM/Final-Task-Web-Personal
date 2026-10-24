@@ -15,8 +15,7 @@ const __dirname = path.dirname(__filename);
 // === Konfigurasi multer untuk upload gambar ===
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // simpan ke src/public/img/projects/
-    cb(null, path.join(__dirname, "../public/img/projects"));
+    cb(null, path.join(__dirname, "../../public/img/projects"));
   },
   filename: (req, file, cb) => {
     const uniqueName = Date.now() + path.extname(file.originalname);
@@ -87,7 +86,7 @@ router.post("/add-project", upload.single("image"), async (req, res) => {
 // work experience //
 const storageExperience = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../public/img/experience"));
+    cb(null, path.join(__dirname, "../../public/img/experience"));
   },
   filename: (req, file, cb) => {
     const uniqueName = Date.now() + path.extname(file.originalname);
